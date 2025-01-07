@@ -17,32 +17,82 @@
             font-size: 2rem;
             color: #00ffcc;
         }
-        table {
+        .dataframe {
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
         }
-        th, td {
+        .dataframe th, .dataframe td {
             text-align: left;
             padding: 8px;
             white-space: nowrap;
+            border: none;
         }
-        th {
+        .dataframe th {
             font-weight: bold;
             color: #00ffcc;
+            background-color: #121212;
         }
-        tr:nth-child(even) {
+        .dataframe tr:nth-child(even) {
             background-color: #1e1e1e;
         }
-        tr:nth-child(odd) {
+        .dataframe tr:nth-child(odd) {
             background-color: #141414;
+        }
+        .dataframe td {
+            color: #ffffff;
+        }
+        /* Style for change columns */
+        .dataframe td:nth-child(3),
+        .dataframe td:nth-child(5) {
+            font-weight: bold;
+        }
+        /* Red color for negative percentages */
+        .dataframe td:nth-child(3):not(:contains("No Data")):contains("-"),
+        .dataframe td:nth-child(5):not(:contains("No Data")):contains("-") {
+            color: #ff4444;
+        }
+        /* Green color for positive percentages */
+        .dataframe td:nth-child(3):not(:contains("No Data")):not(:contains("-")),
+        .dataframe td:nth-child(5):not(:contains("No Data")):not(:contains("-")) {
+            color: #44ff44;
         }
     </style>
 </head>
 <body>
     <h1>Social Media Follower Count</h1>
-    <div>
-        {{ data|safe }}
+    
+    <!-- Add search form -->
+    <div style="text-align: center; margin-bottom: 20px;">
+        <input type="text" id="searchInput" 
+               placeholder="Search for token..." 
+               style="padding: 8px; 
+                      width: 200px; 
+                      background-color: #2b2b2b; 
+                      border: 1px solid #00ffcc; 
+                      color: white; 
+                      border-radius: 4px;">
     </div>
+
+    <div>
+        {{ data | safe }}
+    </div>
+
+    <!-- Add JavaScript for search functionality -->
+    <script>
+        document.getElementById('searchInput').addEventListener('input', function() {
+            const searchText = this.value.toLowerCase();
+            const rows = document.querySelectorAll('.dataframe tr');
+            
+            rows.forEach((row, index) => {
+                if (index === 0) return; // Skip header row
+                const tokenCell = row.cells[0];
+                if (tokenCell) {
+                    const token = tokenCell.textContent.toLowerCase();
+                    row.style.display = token.includes(searchText) ? '' : 'none';
+                }
+            });
+        });
+    </script>
 </body>
 </html>
