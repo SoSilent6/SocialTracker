@@ -56,7 +56,17 @@ def show_excel():
 
    html_table = styled_df.to_html()
    
-   # Change this to use render_template instead of raw HTML
+   # Write to both locations
+   with open("templates/index.html", "r") as template_file:
+       template_content = template_file.read()
+   
+   final_html = template_content.replace("{{ data | safe }}", html_table)
+   
+   # Write to root directory for Netlify
+   with open("index.html", "w") as f:
+       f.write(final_html)
+   
+   # Return for Flask local development
    return render_template('index.html', data=html_table)
 
 if __name__ == '__main__':
