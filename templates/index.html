@@ -57,21 +57,71 @@
         .dataframe td:nth-child(5):not(:contains("No Data")):not(:contains("-")) {
             color: #44ff44;
         }
+        .sort-header {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .sort-header:after {
+            content: '↕';
+            margin-left: 4px;
+            color: #666;
+            display: inline-block;
+        }
+
+        .sort-header.sort-asc:after {
+            content: '↑';
+            color: #00ffcc;
+        }
+
+        .sort-header.sort-desc:after {
+            content: '↓';
+            color: #00ffcc;
+        }
+
+        .sort-header.sort-none:after {
+            content: '↕';
+            color: #666;
+        }
+
+        .dataframe td, .dataframe th {
+            font-weight: normal !important;
+        }
+
+        .token-link {
+            text-decoration: none;
+            color: #00ffcc;
+            margin-left: 8px;
+            padding: 2px 8px;
+            border: 1px solid #00ffcc;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .token-link:hover {
+            background: #00ffcc22;
+        }
+
+        .back-button {
+            color: #00ffcc;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid #00ffcc;
+            border-radius: 4px;
+            margin: 20px;
+            display: inline-block;
+        }
+
+        .back-button:hover {
+            background: #00ffcc22;
+        }
     </style>
 </head>
 <body>
-    <h1>Social Media Follower Count</h1>
-    
-    <!-- Add search form -->
-    <div style="text-align: center; margin-bottom: 20px;">
-        <input type="text" id="searchInput" 
-               placeholder="Search for token..." 
-               style="padding: 8px; 
-                      width: 200px; 
-                      background-color: #2b2b2b; 
-                      border: 1px solid #00ffcc; 
-                      color: white; 
-                      border-radius: 4px;">
+    <h1 style="color: #00ffcc; text-align: center;">Crypto社交平台数据</h1>
+    <div style="text-align: center; margin: 20px;">
+        <input type="text" id="tokenSearch" placeholder="搜索代币..." 
+               style="background: black; color: white; border: 1px solid #00ffcc; padding: 8px; border-radius: 4px;">
     </div>
 
     <div>
@@ -92,6 +142,75 @@
                     row.style.display = token.includes(searchText) ? '' : 'none';
                 }
             });
+        });
+
+        // Add sorting functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const table = document.querySelector('.dataframe');
+            const headers = table.querySelectorAll('th');
+            let originalRows = null;  // Store original order
+            
+            // Find the Change 24h (X) column index
+            let changeColumnIndex = -1;
+            headers.forEach((header, index) => {
+                if (header.textContent.includes('Change 24h (X)')) {
+                    changeColumnIndex = index;
+                    header.classList.add('sort-header', 'sort-none');
+                    header.addEventListener('click', () => sortTable(index));
+                }
+            });
+
+            function sortTable(column) {
+                const header = headers[column];
+                const tbody = table.querySelector('tbody');
+                
+                // Store original order if not stored yet
+                if (!originalRows) {
+                    originalRows = Array.from(tbody.querySelectorAll('tr'));
+                }
+
+                // Cycle through states: none -> asc -> desc -> none
+                const isNone = header.classList.contains('sort-none');
+                const isAsc = header.classList.contains('sort-asc');
+                
+                // Remove existing sort classes
+                headers.forEach(h => {
+                    h.classList.remove('sort-asc', 'sort-desc', 'sort-none');
+                });
+                
+                let rows;
+                if (isNone) {
+                    // First click - sort ascending
+                    header.classList.add('sort-asc');
+                    rows = Array.from(tbody.querySelectorAll('tr')).sort((a, b) => compareValues(a, b, column, true));
+                } else if (isAsc) {
+                    // Second click - sort descending
+                    header.classList.add('sort-desc');
+                    rows = Array.from(tbody.querySelectorAll('tr')).sort((a, b) => compareValues(a, b, column, false));
+                } else {
+                    // Third click - restore original order
+                    header.classList.add('sort-none');
+                    rows = [...originalRows];  // Use spread operator to create a new array
+                }
+
+                // Reorder the rows
+                rows.forEach(row => tbody.appendChild(row));
+            }
+
+            function compareValues(a, b, column, ascending) {
+                let aVal = a.cells[column].textContent;
+                let bVal = b.cells[column].textContent;
+                
+                // Convert percentage strings to numbers
+                if (aVal !== 'No Data') aVal = parseFloat(aVal.replace('%', ''));
+                if (bVal !== 'No Data') bVal = parseFloat(bVal.replace('%', ''));
+                
+                // Handle 'No Data' cases
+                if (aVal === 'No Data') return 1;
+                if (bVal === 'No Data') return -1;
+                
+                return ascending ? aVal - bVal : bVal - aVal;
+            }
         });
     </script>
 </body>
