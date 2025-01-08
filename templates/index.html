@@ -12,124 +12,301 @@
             margin: 0;
             padding: 20px;
         }
+        
         h1 {
             text-align: center;
             font-size: 2rem;
             color: #00ffcc;
         }
+        
         .dataframe {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
+            margin: 20px auto;
+            max-width: 1200px;  /* Fixed maximum width */
+            table-layout: fixed;  /* Fixed table layout */
         }
-        .dataframe th, .dataframe td {
-            text-align: left;
-            padding: 8px;
-            white-space: nowrap;
-            border: none;
-        }
+        
         .dataframe th {
-            font-weight: bold;
+            padding: 8px 10px !important;
+            text-align: right !important;
             color: #00ffcc;
-            background-color: #121212;
+            font-weight: normal;
+            white-space: nowrap;
         }
+        
+        .dataframe td {
+            padding: 8px 10px !important;
+            text-align: right !important;
+        }
+        
+        /* Token column (first column) */
+        .dataframe td:first-child {
+            text-align: left !important;
+            white-space: nowrap;
+            width: 200px;  /* Fixed width for first column */
+        }
+        
+        /* Style for the token links */
+        .token-link {
+            color: #00ffcc;
+            text-decoration: none;
+            border: 1px solid #00ffcc;
+            border-radius: 4px;
+            padding: 2px 8px;
+            margin-left: 10px;
+            white-space: nowrap;
+        }
+        
+        .token-link:hover {
+            background-color: rgba(0, 255, 204, 0.1);
+        }
+        
+        /* Column widths */
+        .dataframe th:nth-child(2),
+        .dataframe td:nth-child(2) { 
+            min-width: 120px !important; 
+            width: 120px !important; 
+        }
+        
+        .dataframe th:nth-child(3),
+        .dataframe td:nth-child(3) { width: 100px; }  /* X粉丝数量 */
+        
+        .dataframe th:nth-child(4),
+        .dataframe td:nth-child(4) { 
+            min-width: 120px !important; 
+            width: 120px !important; 
+        }
+        
+        .dataframe th:nth-child(5),
+        .dataframe td:nth-child(5) { width: 100px; }  /* 24h粉丝涨跌 (X) */
+        
+        .dataframe th:nth-child(6),
+        .dataframe td:nth-child(6) { 
+            min-width: 120px !important; 
+            width: 120px !important; 
+        }
+        
+        /* Alternating row colors */
         .dataframe tr:nth-child(even) {
             background-color: #1e1e1e;
         }
+        
         .dataframe tr:nth-child(odd) {
             background-color: #141414;
         }
-        .dataframe td {
-            color: #ffffff;
+        
+        /* Header break styling */
+        .header-break {
+            display: block;
+            font-size: 0.8em;
+            color: #888;
         }
-        /* Style for change columns */
-        .dataframe td:nth-child(3),
-        .dataframe td:nth-child(5) {
-            font-weight: bold;
-        }
-        /* Red color for negative percentages */
-        .dataframe td:nth-child(3):not(:contains("No Data")):contains("-"),
-        .dataframe td:nth-child(5):not(:contains("No Data")):contains("-") {
-            color: #ff4444;
-        }
-        /* Green color for positive percentages */
-        .dataframe td:nth-child(3):not(:contains("No Data")):not(:contains("-")),
-        .dataframe td:nth-child(5):not(:contains("No Data")):not(:contains("-")) {
-            color: #44ff44;
-        }
+        
+        /* Sorting arrows styling */
         .sort-header {
             cursor: pointer;
-            position: relative;
         }
-
-        .sort-header:after {
-            content: '↕';
-            margin-left: 4px;
-            color: #666;
+        
+        .sort-header:hover {
+            background-color: rgba(0, 255, 204, 0.1);
+        }
+        
+        th {
+            white-space: nowrap !important;  /* Prevent header text wrapping */
+            padding: 12px !important;
+            vertical-align: middle !important;
+        }
+        
+        .sort-arrow {
             display: inline-block;
-        }
-
-        .sort-header.sort-asc:after {
-            content: '↑';
-            color: #00ffcc;
-        }
-
-        .sort-header.sort-desc:after {
-            content: '↓';
-            color: #00ffcc;
-        }
-
-        .sort-header.sort-none:after {
-            content: '↕';
-            color: #666;
-        }
-
-        .dataframe td, .dataframe th {
-            font-weight: normal !important;
-        }
-
-        .token-link {
-            text-decoration: none;
-            color: #00ffcc;
             margin-left: 8px;
-            padding: 2px 8px;
-            border: 1px solid #00ffcc;
-            border-radius: 4px;
-            font-size: 0.9em;
-        }
-
-        .token-link:hover {
-            background: #00ffcc22;
-        }
-
-        .back-button {
+            font-size: 16px;
+            cursor: pointer;
             color: #00ffcc;
-            text-decoration: none;
-            padding: 8px 16px;
+            background: transparent;
             border: 1px solid #00ffcc;
             border-radius: 4px;
-            margin: 20px;
-            display: inline-block;
+            padding: 2px 6px;
+            vertical-align: middle;
         }
-
-        .back-button:hover {
-            background: #00ffcc22;
+        
+        .sort-arrow:hover {
+            background-color: rgba(0, 255, 204, 0.1);
+        }
+        
+        /* Ensure the token cell has enough width */
+        td:first-child {
+            min-width: 150px;
+        }
+        
+        .customize-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            color: #00ffcc;
+            border: 1px solid #00ffcc;
+            border-radius: 4px;
+            padding: 12px 24px;  /* Bigger padding */
+            cursor: pointer;
+            z-index: 1000;
+            font-size: 18px;    /* Bigger font */
+        }
+        
+        .customize-button:hover {
+            background-color: rgba(0, 255, 204, 0.1);
+        }
+        
+        .column-selector {
+            display: none;
+            position: absolute;
+            top: 70px;          /* Adjusted for bigger button */
+            right: 20px;
+            background: #1a1a1a;
+            border: 1px solid #00ffcc;
+            border-radius: 4px;
+            padding: 20px;      /* More padding */
+            z-index: 1000;
+            min-width: 250px;   /* Ensure enough width */
+        }
+        
+        .column-option {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;     /* More vertical spacing */
+            color: white;
+            font-size: 16px;    /* Bigger font */
+        }
+        
+        .column-option input[type="checkbox"] {
+            width: 20px;        /* Bigger checkbox */
+            height: 20px;       /* Bigger checkbox */
+            margin-right: 15px; /* More spacing after checkbox */
+            cursor: pointer;
+        }
+        
+        .column-option label {
+            cursor: pointer;    /* Make labels clickable */
+            user-select: none;  /* Prevent text selection */
+            flex: 1;           /* Take remaining space */
+            padding: 5px 0;    /* Bigger click target */
+        }
+        
+        /* Make the entire option row clickable */
+        .column-option:hover {
+            background-color: rgba(0, 255, 204, 0.1);
+            border-radius: 4px;
+            padding-left: 10px;
+            margin-left: -10px;
+            margin-right: -10px;
+            padding-right: 10px;
+        }
+        
+        .hidden-column {
+            display: none;
+        }
+        
+        .last-update {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00ffcc;
+            font-size: 16px;
+            padding: 12px 24px;
+            border: 1px solid #00ffcc;
+            border-radius: 4px;
+            background: transparent;
         }
     </style>
 </head>
 <body>
-    <h1 style="color: #00ffcc; text-align: center;">Crypto社交平台数据</h1>
+    <h1>Crypto社交平台数据</h1>
     <div style="text-align: center; margin: 20px;">
         <input type="text" id="tokenSearch" placeholder="搜索代币..." 
                style="background: black; color: white; border: 1px solid #00ffcc; padding: 8px; border-radius: 4px;">
     </div>
-
+    
     <div>
         {{ data | safe }}
     </div>
-
-    <!-- Add JavaScript for search functionality -->
+    
+    <button class="customize-button" onclick="toggleColumnSelector()">自定义</button>
+    <div class="column-selector" id="columnSelector">
+        <div class="column-option">
+            <input type="checkbox" id="col_volume" checked onchange="toggleColumn(1, this.checked)">
+            <label for="col_volume">24h交易量</label>
+        </div>
+        <div class="column-option">
+            <input type="checkbox" id="col_x_followers" checked onchange="toggleColumn(2, this.checked)">
+            <label for="col_x_followers">X粉丝数量</label>
+        </div>
+        <div class="column-option">
+            <input type="checkbox" id="col_x_24h" checked onchange="toggleColumn(3, this.checked)">
+            <label for="col_x_24h">24h粉丝涨跌(X)</label>
+        </div>
+        <div class="column-option">
+            <input type="checkbox" id="col_x_3d" checked onchange="toggleColumn(4, this.checked)">
+            <label for="col_x_3d">3天粉丝涨跌(X)</label>
+        </div>
+        <div class="column-option">
+            <input type="checkbox" id="col_discord_followers" checked onchange="toggleColumn(5, this.checked)">
+            <label for="col_discord_followers">Discord粉丝数量</label>
+        </div>
+        <div class="column-option">
+            <input type="checkbox" id="col_discord_24h" checked onchange="toggleColumn(6, this.checked)">
+            <label for="col_discord_24h">24h粉丝涨跌(Discord)</label>
+        </div>
+        <div class="column-option">
+            <input type="checkbox" id="col_discord_3d" checked onchange="toggleColumn(7, this.checked)">
+            <label for="col_discord_3d">3天粉丝涨跌(Discord)</label>
+        </div>
+    </div>
+    
+    <div class="last-update">最后更新：{{ last_update }}</div>
+    
     <script>
+        const table = document.querySelector('.dataframe');
+        const tbody = table.querySelector('tbody');
+        const originalOrder = Array.from(tbody.querySelectorAll('tr')).map(row => row.cloneNode(true));
+        
+        // Add click handlers to headers
+        table.querySelectorAll('th').forEach((header, index) => {
+            if (header.textContent.includes('↕')) {
+                header.onclick = () => sortTableWithReset(index);
+            }
+        });
+        
+        let sortStates = {};
+        
+        function sortTableWithReset(columnIndex) {
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            sortStates[columnIndex] = (sortStates[columnIndex] || 0) + 1;
+            if (sortStates[columnIndex] > 2) sortStates[columnIndex] = 0;
+            
+            // Clear tbody
+            while (tbody.firstChild) {
+                tbody.removeChild(tbody.firstChild);
+            }
+            
+            if (sortStates[columnIndex] === 0) {
+                // Reset to original order
+                originalOrder.forEach(row => tbody.appendChild(row.cloneNode(true)));
+            } else {
+                // Sort
+                rows.sort((a, b) => compareValues(a, b, columnIndex, sortStates[columnIndex] === 1));
+                rows.forEach(row => tbody.appendChild(row));
+            }
+        }
+        
+        function compareValues(a, b, columnIndex, ascending) {
+            let aVal = a.cells[columnIndex].textContent.trim().replace('%', '');
+            let bVal = b.cells[columnIndex].textContent.trim().replace('%', '');
+            
+            aVal = aVal === '' ? 0 : parseFloat(aVal);
+            bVal = bVal === '' ? 0 : parseFloat(bVal);
+            
+            return ascending ? aVal - bVal : bVal - aVal;
+        }
+
         document.getElementById('tokenSearch').addEventListener('input', function() {
             const searchText = this.value.toLowerCase();
             const rows = document.querySelectorAll('.dataframe tr');
@@ -144,74 +321,41 @@
             });
         });
 
-        // Add sorting functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const table = document.querySelector('.dataframe');
-            const headers = table.querySelectorAll('th');
-            let originalRows = null;  // Store original order
-            
-            // Find the Change 24h (X) column index
-            let changeColumnIndex = -1;
-            headers.forEach((header, index) => {
-                if (header.textContent.includes('Change 24h (X)')) {
-                    changeColumnIndex = index;
-                    header.classList.add('sort-header', 'sort-none');
-                    header.addEventListener('click', () => sortTable(index));
-                }
-            });
+        // Debug: Log the headers to verify they're being found
+        console.log("Sort headers found:", document.querySelectorAll('.sort-header').length);
 
-            function sortTable(column) {
-                const header = headers[column];
-                const tbody = table.querySelector('tbody');
-                
-                // Store original order if not stored yet
-                if (!originalRows) {
-                    originalRows = Array.from(tbody.querySelectorAll('tr'));
-                }
-
-                // Cycle through states: none -> asc -> desc -> none
-                const isNone = header.classList.contains('sort-none');
-                const isAsc = header.classList.contains('sort-asc');
-                
-                // Remove existing sort classes
-                headers.forEach(h => {
-                    h.classList.remove('sort-asc', 'sort-desc', 'sort-none');
-                });
-                
-                let rows;
-                if (isNone) {
-                    // First click - sort ascending
-                    header.classList.add('sort-asc');
-                    rows = Array.from(tbody.querySelectorAll('tr')).sort((a, b) => compareValues(a, b, column, true));
-                } else if (isAsc) {
-                    // Second click - sort descending
-                    header.classList.add('sort-desc');
-                    rows = Array.from(tbody.querySelectorAll('tr')).sort((a, b) => compareValues(a, b, column, false));
-                } else {
-                    // Third click - restore original order
-                    header.classList.add('sort-none');
-                    rows = [...originalRows];  // Use spread operator to create a new array
-                }
-
-                // Reorder the rows
-                rows.forEach(row => tbody.appendChild(row));
-            }
-
-            function compareValues(a, b, column, ascending) {
-                let aVal = a.cells[column].textContent;
-                let bVal = b.cells[column].textContent;
-                
-                // Convert percentage strings to numbers
-                if (aVal !== 'No Data') aVal = parseFloat(aVal.replace('%', ''));
-                if (bVal !== 'No Data') bVal = parseFloat(bVal.replace('%', ''));
-                
-                // Handle 'No Data' cases
-                if (aVal === 'No Data') return 1;
-                if (bVal === 'No Data') return -1;
-                
-                return ascending ? aVal - bVal : bVal - aVal;
+        function toggleColumnSelector() {
+            const selector = document.getElementById('columnSelector');
+            selector.style.display = selector.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // Close the selector if clicking outside
+        document.addEventListener('click', function(event) {
+            const selector = document.getElementById('columnSelector');
+            const customizeButton = document.querySelector('.customize-button');
+            if (!selector.contains(event.target) && event.target !== customizeButton) {
+                selector.style.display = 'none';
             }
         });
+        
+        function toggleColumn(columnIndex, show) {
+            const table = document.querySelector('.dataframe');
+            const headers = table.querySelectorAll('th');
+            const rows = table.querySelectorAll('tr');
+            
+            // Toggle header
+            if (headers[columnIndex]) {
+                headers[columnIndex].classList.toggle('hidden-column', !show);
+            }
+            
+            // Toggle cells
+            rows.forEach(row => {
+                const cell = row.cells[columnIndex];
+                if (cell) {
+                    cell.classList.toggle('hidden-column', !show);
+                }
+            });
+        }
     </script>
 </body>
 </html>

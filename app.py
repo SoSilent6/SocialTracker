@@ -1,22 +1,69 @@
 from flask import Flask, render_template
 import pandas as pd
+from datetime import datetime
+import os
+import math
 
 app = Flask(__name__)
 
 @app.route('/')
 def show_excel():
-   # Read both sheets from the single Excel file
-   excel_file = pd.ExcelFile('Social Follower Count.xlsx')
-   x_sheet = pd.read_excel(excel_file, 'X')
-   discord_sheet = pd.read_excel(excel_file, 'Discord')
+   # Get Excel file modification time
+   excel_path = 'Social Follower Count.xlsx'
+   mod_timestamp = os.path.getmtime(excel_path)
+   current_time = datetime.now().timestamp()
    
-   x_sheet.columns = x_sheet.columns.str.strip()
-   discord_sheet.columns = discord_sheet.columns.str.strip()
+   # Calculate time difference in minutes
+   time_diff = (current_time - mod_timestamp) / 60
+   
+   # Format the time difference in Chinese
+   if time_diff < 60:
+       last_update = f"{math.floor(time_diff)}分钟前"
+   else:
+       hours = math.floor(time_diff / 60)
+       last_update = f"{hours}小时前"
+
+   # Read the Info sheet that has all the prepared data
+   excel_file = pd.ExcelFile('Social Follower Count.xlsx')
+   info_sheet = pd.read_excel(excel_file, 'Info', engine='openpyxl', dtype=object)
+   
+   # Function to convert zeros to empty string
+   def convert_zero_to_empty(value):
+       try:
+           float_val = float(value)
+           return "" if float_val == 0 else value
+       except:
+           return value
+
+   # First define the column names as variables so they stay consistent
+   columns = {
+       'token': "代币",
+       'volume': "24h交易量 <button class='sort-arrow'>↕</button>",
+       'x_followers': "X粉丝数量",
+       'x_24h': "24h粉丝涨跌(X) <button class='sort-arrow'>↕</button>",
+       'x_3d': "3天粉丝涨跌(X) <button class='sort-arrow'>↕</button>",
+       'discord_followers': "Discord粉丝数量",
+       'discord_24h': "24h粉丝涨跌(Discord) <button class='sort-arrow'>↕</button>",
+       'discord_3d': "3天粉丝涨跌(Discord) <button class='sort-arrow'>↕</button>"
+   }
+
+   # Create DataFrame with correct column order
+   result_df = pd.DataFrame({
+       columns['token']: info_sheet['Token'],
+       columns['volume']: info_sheet['24h交易量'].fillna("").apply(convert_zero_to_empty),
+       columns['x_followers']: info_sheet['X粉丝数量'].fillna("").apply(
+           lambda x: int(x) if isinstance(x, (int, float)) and not pd.isna(x) and float(x) != 0 else ""),
+       columns['x_24h']: info_sheet['24h粉丝涨跌(X)'].fillna("").apply(convert_zero_to_empty),
+       columns['x_3d']: info_sheet['3天粉丝涨跌(X)'].fillna("").apply(convert_zero_to_empty),
+       columns['discord_followers']: info_sheet['Discord粉丝数量'].fillna("").apply(
+           lambda x: int(x) if isinstance(x, (int, float)) and not pd.isna(x) and float(x) != 0 else ""),
+       columns['discord_24h']: info_sheet['24h粉丝涨跌(Discord)'].fillna("").apply(convert_zero_to_empty),
+       columns['discord_3d']: info_sheet['3天粉丝涨跌(Discord)'].fillna("").apply(convert_zero_to_empty)
+   })
 
    def color_percentage(value):
        if isinstance(value, (str, float)) and value != "":
            try:
-               # If it's a string, remove the % sign first
                val = float(str(value).replace('%', '')) if isinstance(value, str) else float(value)
                if val < 0:
                    return 'color: rgb(255, 68, 68)'  # Bright red
@@ -27,50 +74,36 @@ def show_excel():
        return ''
 
    def format_token_column(value):
-       return f'{value} <a href="/token/{value}" class="token-link">更多数据</a>'
-
-   result_df = pd.DataFrame({
-       "代币": x_sheet.iloc[:, 0],
-       "24h交易量": x_sheet.iloc[:, 1].fillna(""),
-       "X粉丝数量": x_sheet.iloc[:, 11].fillna("").apply(
-           lambda x: int(x) if isinstance(x, (int, float)) and not pd.isna(x) else x),
-       "24h粉丝涨跌 (X)": x_sheet.iloc[:, 1].fillna(""),
-       "Discord粉丝数量": discord_sheet.iloc[:, 11].fillna("").apply(
-           lambda x: int(x) if isinstance(x, (int, float)) and not pd.isna(x) else x),
-       "24h粉丝涨跌 (Discord)": discord_sheet.iloc[:, 1].fillna("")
-   })
+       return f'<div style="display: flex; justify-content: space-between; align-items: center;">{value} <a href="/token/{value}" class="token-link">更多数据</a></div>'
 
    styled_df = result_df.style\
        .hide(axis='index')\
-       .applymap(color_percentage, subset=['24h交易量', '24h粉丝涨跌 (X)', '24h粉丝涨跌 (Discord)'])\
+       .map(color_percentage, subset=[
+           columns['volume'],
+           columns['x_24h'],
+           columns['x_3d'],
+           columns['discord_24h'],
+           columns['discord_3d']
+       ])\
+       .format({
+           columns['token']: format_token_column,
+           columns['x_followers']: lambda x: "{:,}".format(x) if isinstance(x, (int, float)) and x != "" else x,
+           columns['discord_followers']: lambda x: "{:,}".format(x) if isinstance(x, (int, float)) and x != "" else x,
+           columns['volume']: lambda x: f"{x}%" if x != "" else x,
+           columns['x_24h']: lambda x: f"{x}%" if x != "" else x,
+           columns['x_3d']: lambda x: f"{x}%" if x != "" else x,
+           columns['discord_24h']: lambda x: f"{x}%" if x != "" else x,
+           columns['discord_3d']: lambda x: f"{x}%" if x != "" else x
+       })\
        .set_table_attributes('border="0" class="dataframe table table-dark table-striped" style="font-weight: normal"')\
        .set_table_styles([
            {'selector': 'th', 'props': [('font-weight', 'normal')]},
            {'selector': 'td', 'props': [('font-weight', 'normal')]}
-       ])\
-       .format({
-           "代币": format_token_column,
-           "X粉丝数量": lambda x: "{:,}".format(x) if isinstance(x, (int, float)) else x,
-           "Discord粉丝数量": lambda x: "{:,}".format(x) if isinstance(x, (int, float)) else x,
-           "24h交易量": lambda x: f"{x}%" if x != "" else x,
-           "24h粉丝涨跌 (X)": lambda x: f"{x}%" if x != "" else x,
-           "24h粉丝涨跌 (Discord)": lambda x: f"{x}%" if x != "" else x
-       })
+       ])
 
-   html_table = styled_df.to_html()
+   html_table = styled_df.to_html(escape=False)
    
-   # Write to both locations - with explicit UTF-8 encoding
-   with open("templates/index.html", "r", encoding='utf-8') as template_file:
-       template_content = template_file.read()
-   
-   final_html = template_content.replace("{{ data | safe }}", html_table)
-   
-   # Write to root directory for Netlify - with explicit UTF-8 encoding
-   with open("index.html", "w", encoding='utf-8') as f:
-       f.write(final_html)
-   
-   # Return for Flask local development
-   return render_template('index.html', data=html_table)
+   return render_template('index.html', data=html_table, last_update=last_update)
 
 @app.route('/token/<token_name>')
 def token_page(token_name):
