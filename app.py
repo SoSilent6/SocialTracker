@@ -3,6 +3,11 @@ import pandas as pd
 from datetime import datetime
 import os
 import math
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
@@ -10,8 +15,14 @@ app = Flask(__name__)
 def show_excel():
     try:
         excel_path = 'Social Follower Count.xlsx'
+        
+        # Use logger instead of print
+        logger.debug(f"Current working directory: {os.getcwd()}")
+        logger.debug(f"Files in directory: {os.listdir()}")
+        
         if not os.path.exists(excel_path):
-            return "Error: Data file not found", 500
+            logger.error(f"Excel file not found at: {excel_path}")
+            return f"Error: Data file not found at {excel_path}", 500
             
         # Get Excel file modification time
         mod_timestamp = os.path.getmtime(excel_path)
@@ -110,8 +121,8 @@ def show_excel():
         return render_template('index.html', data=html_table, last_update=last_update)
 
     except Exception as e:
-        print(f"Error reading Excel file: {e}")
-        return "Error loading data", 500
+        logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+        return f"Unexpected error: {str(e)}", 500
 
 @app.route('/token/<token_name>')
 def token_page(token_name):
