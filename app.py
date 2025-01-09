@@ -4,6 +4,7 @@ from datetime import datetime
 import os
 import math
 import logging
+import openpyxl
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -11,118 +12,96 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
+def convert_zero_to_empty(value):
+    try:
+        # Handle Excel errors
+        if isinstance(value, str) and ('#VALUE!' in value or '#DIV/0!' in value):
+            return ""
+            
+        float_val = float(value)
+        return "" if float_val == 0 else value
+    except:
+        return value
+
+def format_token_column(value):
+    return f'<div style="display: flex; justify-content: space-between; align-items: center;">{value} <a href="/token/{value}" class="token-link">更多数据</a></div>'
+
 @app.route('/')
 def show_excel():
     try:
         excel_path = 'Social Follower Count.xlsx'
         
-        # Use logger instead of print
-        logger.debug(f"Current working directory: {os.getcwd()}")
-        logger.debug(f"Files in directory: {os.listdir()}")
+        # Read from Info2 sheet which contains only values
+        info_sheet = pd.read_excel(
+            excel_path,
+            sheet_name='Info2',
+            engine='openpyxl'
+        )
         
-        if not os.path.exists(excel_path):
-            logger.error(f"Excel file not found at: {excel_path}")
-            return f"Error: Data file not found at {excel_path}", 500
-            
-        # Get Excel file modification time
-        mod_timestamp = os.path.getmtime(excel_path)
-        current_time = datetime.now().timestamp()
+        logger.debug(f"DataFrame shape: {info_sheet.shape}")
+        logger.debug(f"DataFrame columns: {info_sheet.columns.tolist()}")
+        logger.debug(f"First row: {info_sheet.iloc[0].tolist() if len(info_sheet) > 0 else 'No data'}")
         
-        # Calculate time difference in minutes
-        time_diff = (current_time - mod_timestamp) / 60
-        
-        # Format the time difference in Chinese
-        if time_diff < 60:
-            last_update = f"{math.floor(time_diff)}分钟前"
-        else:
-            hours = math.floor(time_diff / 60)
-            last_update = f"{hours}小时前"
-
-        # Read the Info sheet that has all the prepared data
-        excel_file = pd.ExcelFile('Social Follower Count.xlsx')
-        info_sheet = pd.read_excel(excel_file, 'Info', engine='openpyxl', dtype=object)
-        
-        # Function to convert zeros to empty string
-        def convert_zero_to_empty(value):
-            try:
-                float_val = float(value)
-                return "" if float_val == 0 else value
-            except:
-                return value
-
-        # First define the column names as variables so they stay consistent
-        columns = {
-            'token': "代币",
-            'volume': "24h交易量 <button class='sort-arrow'>↕</button>",
-            'x_followers': "X粉丝数量",
-            'x_24h': "24h粉丝涨跌(X) <button class='sort-arrow'>↕</button>",
-            'x_3d': "3天粉丝涨跌(X) <button class='sort-arrow'>↕</button>",
-            'discord_followers': "Discord粉丝数量",
-            'discord_24h': "24h粉丝涨跌(Discord) <button class='sort-arrow'>↕</button>",
-            'discord_3d': "3天粉丝涨跌(Discord) <button class='sort-arrow'>↕</button>"
-        }
-
-        # Create DataFrame with correct column order
+        # Create result DataFrame with correct column order
         result_df = pd.DataFrame({
-            columns['token']: info_sheet['Token'],
-            columns['volume']: info_sheet['24h交易量'].fillna("").apply(convert_zero_to_empty),
-            columns['x_followers']: info_sheet['X粉丝数量'].fillna("").apply(
+            "代币": info_sheet['Token'],
+            "24h交易量 <button class='sort-arrow'>↕</button>": info_sheet['24h交易量'].fillna("").apply(convert_zero_to_empty),
+            "X粉丝数量": info_sheet['X粉丝数量'].fillna("").apply(
                 lambda x: int(x) if isinstance(x, (int, float)) and not pd.isna(x) and float(x) != 0 else ""),
-            columns['x_24h']: info_sheet['24h粉丝涨跌(X)'].fillna("").apply(convert_zero_to_empty),
-            columns['x_3d']: info_sheet['3天粉丝涨跌(X)'].fillna("").apply(convert_zero_to_empty),
-            columns['discord_followers']: info_sheet['Discord粉丝数量'].fillna("").apply(
+            "24h粉丝涨跌(X) <button class='sort-arrow'>↕</button>": info_sheet['24h粉丝涨跌(X)'].fillna("").apply(convert_zero_to_empty),
+            "3天粉丝涨跌(X) <button class='sort-arrow'>↕</button>": info_sheet['3天粉丝涨跌(X)'].fillna("").apply(convert_zero_to_empty),
+            "Discord粉丝数量": info_sheet['Discord粉丝数量'].fillna("").apply(
                 lambda x: int(x) if isinstance(x, (int, float)) and not pd.isna(x) and float(x) != 0 else ""),
-            columns['discord_24h']: info_sheet['24h粉丝涨跌(Discord)'].fillna("").apply(convert_zero_to_empty),
-            columns['discord_3d']: info_sheet['3天粉丝涨跌(Discord)'].fillna("").apply(convert_zero_to_empty)
+            "24h粉丝涨跌(Discord) <button class='sort-arrow'>↕</button>": info_sheet['24h粉丝涨跌(Discord)'].fillna("").apply(convert_zero_to_empty),
+            "3天粉丝涨跌(Discord) <button class='sort-arrow'>↕</button>": info_sheet['3天粉丝涨跌(Discord)'].fillna("").apply(convert_zero_to_empty)
         })
 
-        def color_percentage(value):
-            if isinstance(value, (str, float)) and value != "":
-                try:
-                    val = float(str(value).replace('%', '')) if isinstance(value, str) else float(value)
-                    if val < 0:
-                        return 'color: rgb(255, 68, 68)'  # Bright red
-                    elif val > 0:
-                        return 'color: rgb(68, 255, 68)'  # Bright green
-                except:
-                    pass
-            return ''
+        # Style the DataFrame with colors
+        def color_negative_red(val):
+            try:
+                if isinstance(val, str):
+                    val = val.replace('%', '')
+                num = float(val)
+                color = 'red' if num < 0 else 'green' if num > 0 else 'white'
+                return f'color: {color}'
+            except:
+                return 'color: white'
 
-        def format_token_column(value):
-            return f'<div style="display: flex; justify-content: space-between; align-items: center;">{value} <a href="/token/{value}" class="token-link">更多数据</a></div>'
-
+        # Apply styling
         styled_df = result_df.style\
             .hide(axis='index')\
-            .map(color_percentage, subset=[
-                columns['volume'],
-                columns['x_24h'],
-                columns['x_3d'],
-                columns['discord_24h'],
-                columns['discord_3d']
+            .applymap(color_negative_red, subset=[
+                "24h交易量 <button class='sort-arrow'>↕</button>",
+                "24h粉丝涨跌(X) <button class='sort-arrow'>↕</button>",
+                "3天粉丝涨跌(X) <button class='sort-arrow'>↕</button>",
+                "24h粉丝涨跌(Discord) <button class='sort-arrow'>↕</button>",
+                "3天粉丝涨跌(Discord) <button class='sort-arrow'>↕</button>"
             ])\
             .format({
-                columns['token']: format_token_column,
-                columns['x_followers']: lambda x: "{:,}".format(x) if isinstance(x, (int, float)) and x != "" else x,
-                columns['discord_followers']: lambda x: "{:,}".format(x) if isinstance(x, (int, float)) and x != "" else x,
-                columns['volume']: lambda x: f"{x}%" if x != "" else x,
-                columns['x_24h']: lambda x: f"{x}%" if x != "" else x,
-                columns['x_3d']: lambda x: f"{x}%" if x != "" else x,
-                columns['discord_24h']: lambda x: f"{x}%" if x != "" else x,
-                columns['discord_3d']: lambda x: f"{x}%" if x != "" else x
+                "代币": format_token_column,
+                "X粉丝数量": lambda x: "{:,}".format(x) if isinstance(x, (int, float)) and x != "" else x,
+                "Discord粉丝数量": lambda x: "{:,}".format(x) if isinstance(x, (int, float)) and x != "" else x,
+                "24h交易量 <button class='sort-arrow'>↕</button>": lambda x: f"{x}%" if x != "" else x,
+                "24h粉丝涨跌(X) <button class='sort-arrow'>↕</button>": lambda x: f"{x}%" if x != "" else x,
+                "3天粉丝涨跌(X) <button class='sort-arrow'>↕</button>": lambda x: f"{x}%" if x != "" else x,
+                "24h粉丝涨跌(Discord) <button class='sort-arrow'>↕</button>": lambda x: f"{x}%" if x != "" else x,
+                "3天粉丝涨跌(Discord) <button class='sort-arrow'>↕</button>": lambda x: f"{x}%" if x != "" else x
             })\
-            .set_table_attributes('border="0" class="dataframe table table-dark table-striped" style="font-weight: normal"')\
-            .set_table_styles([
-                {'selector': 'th', 'props': [('font-weight', 'normal')]},
-                {'selector': 'td', 'props': [('font-weight', 'normal')]}
-            ])
+            .set_table_attributes('class="dataframe table table-dark table-striped"')
 
         html_table = styled_df.to_html(escape=False)
+        
+        # Calculate last update time
+        mod_timestamp = os.path.getmtime(excel_path)
+        current_time = datetime.now().timestamp()
+        time_diff = (current_time - mod_timestamp) / 60
+        last_update = f"{math.floor(time_diff)}分钟前" if time_diff < 60 else f"{math.floor(time_diff / 60)}小时前"
         
         return render_template('index.html', data=html_table, last_update=last_update)
 
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-        return f"Unexpected error: {str(e)}", 500
+        logger.error(f"Error: {str(e)}", exc_info=True)
+        return f"Error: {str(e)}", 500
 
 @app.route('/token/<token_name>')
 def token_page(token_name):
