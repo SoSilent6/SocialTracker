@@ -350,54 +350,45 @@
             columnVisibility[columns[key]] = !defaultHiddenColumns.includes(columns[key]);
         }
 
-        // Function to update column visibility
         function updateColumnVisibility() {
-            const table = document.querySelector('table');
+            const table = document.querySelector('table.dataframe');
             if (!table) return;
 
-            // Find header row index (usually 0)
             const headerRow = table.querySelector('thead tr');
             if (!headerRow) return;
 
-            // Get all header cells
             const headers = headerRow.querySelectorAll('th');
             
-            // Create a map of column index to column name
-            const columnIndexMap = {};
             headers.forEach((header, index) => {
                 const headerText = header.textContent.trim();
-                columnIndexMap[headerText] = index;
+                const isVisible = columnVisibility[headerText] !== false;  // Default to visible if not set
+                
+                // Update header visibility
+                header.style.display = isVisible ? '' : 'none';
+                
+                // Update all cells in this column
+                table.querySelectorAll('tbody tr').forEach(row => {
+                    const cell = row.cells[index];
+                    if (cell) {
+                        cell.style.display = isVisible ? '' : 'none';
+                    }
+                });
             });
-
-            // Update visibility for each column
-            for (let columnName in columnVisibility) {
-                const columnIndex = columnIndexMap[columnName];
-                if (columnIndex !== undefined) {
-                    const isVisible = columnVisibility[columnName];
-                    
-                    // Update header visibility
-                    headers[columnIndex].style.display = isVisible ? '' : 'none';
-                    
-                    // Update all cells in this column
-                    table.querySelectorAll(`tbody tr`).forEach(row => {
-                        const cell = row.cells[columnIndex];
-                        if (cell) {
-                            cell.style.display = isVisible ? '' : 'none';
-                        }
-                    });
-                }
-            }
         }
 
-        // Update the JavaScript to work with buttons instead of checkboxes
         document.addEventListener('DOMContentLoaded', () => {
             const buttons = document.querySelectorAll('.toggle-button');
             
             buttons.forEach(button => {
+                const columnKey = button.dataset.column;
+                const columnName = columns[columnKey];
+                
+                // Set initial state
+                button.classList.toggle('active', !defaultHiddenColumns.includes(columnName));
+                
                 button.addEventListener('click', () => {
-                    const columnKey = button.dataset.column;
                     button.classList.toggle('active');
-                    columnVisibility[columns[columnKey]] = button.classList.contains('active');
+                    columnVisibility[columnName] = button.classList.contains('active');
                     updateColumnVisibility();
                 });
             });

@@ -1,0 +1,96 @@
+<div class="container mt-4">
+    <h2>{{ token }} Details</h2>
+    
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="x-tab" data-bs-toggle="tab" data-bs-target="#x" type="button" role="tab" aria-controls="x" aria-selected="true">X</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="discord-tab" data-bs-toggle="tab" data-bs-target="#discord" type="button" role="tab" aria-controls="discord" aria-selected="false">Discord</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="telegram-tab" data-bs-toggle="tab" data-bs-target="#telegram" type="button" role="tab" aria-controls="telegram" aria-selected="false">Telegram</button>
+        </li>
+    </ul>
+    
+    <div class="tab-content" id="myTabContent">
+        <!-- X Tab -->
+        <div class="tab-pane fade show active" id="x" role="tabpanel" aria-labelledby="x-tab">
+            <div class="chart-container">
+                <h3>X Followers: {{ "{:,}".format(x_followers) }}</h3>
+                <canvas id="xChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Discord Tab -->
+        <div class="tab-pane fade" id="discord" role="tabpanel" aria-labelledby="discord-tab">
+            <div class="chart-container">
+                <h3>Discord Members: {{ "{:,}".format(discord_followers) }}</h3>
+                <canvas id="discordChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Telegram Tab -->
+        <div class="tab-pane fade" id="telegram" role="tabpanel" aria-labelledby="telegram-tab">
+            <div class="chart-container">
+                <h3>Telegram Members: {{ "{:,}".format(telegram_followers) }}</h3>
+                <canvas id="telegramChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ... existing chart options ...
+
+    // X Chart
+    const xCtx = document.getElementById('xChart').getContext('2d');
+    const xData = {{ x_history|tojson }};
+    new Chart(xCtx, {
+        type: 'line',
+        data: {
+            labels: xData.map(d => d.date),
+            datasets: [{
+                label: 'X Followers',
+                data: xData.map(d => d.value),
+                borderColor: 'rgb(29, 161, 242)',
+                tension: 0.1
+            }]
+        },
+        options: chartOptions
+    });
+
+    // Discord Chart
+    const discordCtx = document.getElementById('discordChart').getContext('2d');
+    const discordData = {{ discord_history|tojson }};
+    new Chart(discordCtx, {
+        type: 'line',
+        data: {
+            labels: discordData.map(d => d.date),
+            datasets: [{
+                label: 'Discord Members',
+                data: discordData.map(d => d.value),
+                borderColor: 'rgb(114, 137, 218)',
+                tension: 0.1
+            }]
+        },
+        options: chartOptions
+    });
+
+    // Telegram Chart
+    const telegramCtx = document.getElementById('telegramChart').getContext('2d');
+    const telegramData = {{ telegram_history|tojson }};
+    new Chart(telegramCtx, {
+        type: 'line',
+        data: {
+            labels: telegramData.map(d => d.date),
+            datasets: [{
+                label: 'Telegram Members',
+                data: telegramData.map(d => d.value),
+                borderColor: 'rgb(0, 136, 204)',
+                tension: 0.1
+            }]
+        },
+        options: chartOptions
+    });
+</script>
