@@ -216,6 +216,56 @@
             border-radius: 4px;
             background: transparent;
         }
+        
+        .column-toggles {
+            padding: 20px;
+            background: #111;
+            border-radius: 10px;
+            border: 1px solid #00ffcc;
+        }
+
+        .toggle-button {
+            display: block;
+            width: 100%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            background: #222;
+            border: 1px solid #00ffcc;
+            border-radius: 6px;
+            color: #00ffcc;
+            font-size: 16px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-button.active {
+            background: #00ffcc22;
+        }
+
+        .toggle-button:hover {
+            background: #00ffcc11;
+        }
+
+        /* Custom checkbox styling */
+        .toggle-button .checkbox-icon {
+            float: right;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #00ffcc;
+            border-radius: 4px;
+            margin-left: 10px;
+            position: relative;
+        }
+
+        .toggle-button.active .checkbox-icon:after {
+            content: '✓';
+            position: absolute;
+            color: #00ffcc;
+            font-size: 16px;
+            top: -2px;
+            left: 2px;
+        }
     </style>
 </head>
 <body>
@@ -231,39 +281,131 @@
     
     <button class="customize-button" onclick="toggleColumnSelector()">自定义</button>
     <div class="column-selector" id="columnSelector">
-        <div class="column-option">
-            <input type="checkbox" id="col_volume" checked onchange="toggleColumn(1, this.checked)">
-            <label for="col_volume">24h交易量</label>
-        </div>
-        <div class="column-option">
-            <input type="checkbox" id="col_x_followers" checked onchange="toggleColumn(2, this.checked)">
-            <label for="col_x_followers">X粉丝数量</label>
-        </div>
-        <div class="column-option">
-            <input type="checkbox" id="col_x_24h" checked onchange="toggleColumn(3, this.checked)">
-            <label for="col_x_24h">24h粉丝涨跌(X)</label>
-        </div>
-        <div class="column-option">
-            <input type="checkbox" id="col_x_3d" checked onchange="toggleColumn(4, this.checked)">
-            <label for="col_x_3d">3天粉丝涨跌(X)</label>
-        </div>
-        <div class="column-option">
-            <input type="checkbox" id="col_discord_followers" checked onchange="toggleColumn(5, this.checked)">
-            <label for="col_discord_followers">Discord粉丝数量</label>
-        </div>
-        <div class="column-option">
-            <input type="checkbox" id="col_discord_24h" checked onchange="toggleColumn(6, this.checked)">
-            <label for="col_discord_24h">24h粉丝涨跌(Discord)</label>
-        </div>
-        <div class="column-option">
-            <input type="checkbox" id="col_discord_3d" checked onchange="toggleColumn(7, this.checked)">
-            <label for="col_discord_3d">3天粉丝涨跌(Discord)</label>
+        <div class="column-toggles">
+            <button class="toggle-button active" data-column="x_followers">
+                X粉丝数量
+                <span class="checkbox-icon"></span>
+            </button>
+            <button class="toggle-button active" data-column="x_24h">
+                24h粉丝涨跌(X)
+                <span class="checkbox-icon"></span>
+            </button>
+            <button class="toggle-button" data-column="x_3d">
+                3天粉丝涨跌(X)
+                <span class="checkbox-icon"></span>
+            </button>
+            <button class="toggle-button active" data-column="discord_followers">
+                Discord粉丝数量
+                <span class="checkbox-icon"></span>
+            </button>
+            <button class="toggle-button active" data-column="discord_24h">
+                24h粉丝涨跌(Discord)
+                <span class="checkbox-icon"></span>
+            </button>
+            <button class="toggle-button" data-column="discord_3d">
+                3天粉丝涨跌(Discord)
+                <span class="checkbox-icon"></span>
+            </button>
+            <button class="toggle-button active" data-column="telegram_followers">
+                Telegram粉丝数量
+                <span class="checkbox-icon"></span>
+            </button>
+            <button class="toggle-button active" data-column="telegram_24h">
+                24h粉丝涨跌(Telegram)
+                <span class="checkbox-icon"></span>
+            </button>
+            <button class="toggle-button" data-column="telegram_3d">
+                3天粉丝涨跌(Telegram)
+                <span class="checkbox-icon"></span>
+            </button>
         </div>
     </div>
     
     <div class="last-update">最后更新：{{ last_update }}</div>
     
     <script>
+        const columns = {
+            'token': '代币',
+            'x_followers': 'X粉丝数量',
+            'x_24h': '24h粉丝涨跌(X)',
+            'x_3d': '3天粉丝涨跌(X)',
+            'discord_followers': 'Discord粉丝数量',
+            'discord_24h': '24h粉丝涨跌(Discord)',
+            'discord_3d': '3天粉丝涨跌(Discord)',
+            'telegram_followers': 'Telegram粉丝数量',
+            'telegram_24h': '24h粉丝涨跌(Telegram)',
+            'telegram_3d': '3天粉丝涨跌(Telegram)'
+        };
+
+        // Default hidden columns
+        const defaultHiddenColumns = [
+            '3天粉丝涨跌(X)',
+            '3天粉丝涨跌(Discord)',
+            '3天粉丝涨跌(Telegram)'
+        ];
+
+        // Initialize column visibility
+        let columnVisibility = {};
+        for (let key in columns) {
+            columnVisibility[columns[key]] = !defaultHiddenColumns.includes(columns[key]);
+        }
+
+        // Function to update column visibility
+        function updateColumnVisibility() {
+            const table = document.querySelector('table');
+            if (!table) return;
+
+            // Find header row index (usually 0)
+            const headerRow = table.querySelector('thead tr');
+            if (!headerRow) return;
+
+            // Get all header cells
+            const headers = headerRow.querySelectorAll('th');
+            
+            // Create a map of column index to column name
+            const columnIndexMap = {};
+            headers.forEach((header, index) => {
+                const headerText = header.textContent.trim();
+                columnIndexMap[headerText] = index;
+            });
+
+            // Update visibility for each column
+            for (let columnName in columnVisibility) {
+                const columnIndex = columnIndexMap[columnName];
+                if (columnIndex !== undefined) {
+                    const isVisible = columnVisibility[columnName];
+                    
+                    // Update header visibility
+                    headers[columnIndex].style.display = isVisible ? '' : 'none';
+                    
+                    // Update all cells in this column
+                    table.querySelectorAll(`tbody tr`).forEach(row => {
+                        const cell = row.cells[columnIndex];
+                        if (cell) {
+                            cell.style.display = isVisible ? '' : 'none';
+                        }
+                    });
+                }
+            }
+        }
+
+        // Update the JavaScript to work with buttons instead of checkboxes
+        document.addEventListener('DOMContentLoaded', () => {
+            const buttons = document.querySelectorAll('.toggle-button');
+            
+            buttons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const columnKey = button.dataset.column;
+                    button.classList.toggle('active');
+                    columnVisibility[columns[columnKey]] = button.classList.contains('active');
+                    updateColumnVisibility();
+                });
+            });
+            
+            // Initial visibility update
+            updateColumnVisibility();
+        });
+
         const table = document.querySelector('.dataframe');
         const tbody = table.querySelector('tbody');
         const originalOrder = Array.from(tbody.querySelectorAll('tr')).map(row => row.cloneNode(true));

@@ -42,18 +42,21 @@ def show_excel():
         logger.debug(f"DataFrame columns: {info_sheet.columns.tolist()}")
         logger.debug(f"First row: {info_sheet.iloc[0].tolist() if len(info_sheet) > 0 else 'No data'}")
         
-        # Create result DataFrame with correct column order
+        # Create result DataFrame with correct column order (removed 24h交易量, added Telegram columns)
         result_df = pd.DataFrame({
             "代币": info_sheet['Token'],
-            "24h交易量 <button class='sort-arrow'>↕</button>": info_sheet['24h交易量'].fillna("").apply(convert_zero_to_empty),
             "X粉丝数量": info_sheet['X粉丝数量'].fillna("").apply(
                 lambda x: int(x) if isinstance(x, (int, float)) and not pd.isna(x) and float(x) != 0 else ""),
-            "24h粉丝涨跌(X) <button class='sort-arrow'>↕</button>": info_sheet['24h粉丝涨跌(X)'].fillna("").apply(convert_zero_to_empty),
-            "3天粉丝涨跌(X) <button class='sort-arrow'>↕</button>": info_sheet['3天粉丝涨跌(X)'].fillna("").apply(convert_zero_to_empty),
+            "24h粉丝涨跌(X)": info_sheet['24h粉丝涨跌(X)'].fillna("").apply(convert_zero_to_empty),
+            "3天粉丝涨跌(X)": info_sheet['3天粉丝涨跌(X)'].fillna("").apply(convert_zero_to_empty),
             "Discord粉丝数量": info_sheet['Discord粉丝数量'].fillna("").apply(
                 lambda x: int(x) if isinstance(x, (int, float)) and not pd.isna(x) and float(x) != 0 else ""),
-            "24h粉丝涨跌(Discord) <button class='sort-arrow'>↕</button>": info_sheet['24h粉丝涨跌(Discord)'].fillna("").apply(convert_zero_to_empty),
-            "3天粉丝涨跌(Discord) <button class='sort-arrow'>↕</button>": info_sheet['3天粉丝涨跌(Discord)'].fillna("").apply(convert_zero_to_empty)
+            "24h粉丝涨跌(Discord)": info_sheet['24h粉丝涨跌(Discord)'].fillna("").apply(convert_zero_to_empty),
+            "3天粉丝涨跌(Discord)": info_sheet['3天粉丝涨跌(Discord)'].fillna("").apply(convert_zero_to_empty),
+            "Telegram粉丝数量": info_sheet['Telegram粉丝数量'].fillna("").apply(
+                lambda x: int(x) if isinstance(x, (int, float)) and not pd.isna(x) and float(x) != 0 else ""),
+            "24h粉丝涨跌(Telegram)": info_sheet['24h粉丝涨跌(Telegram)'].fillna("").apply(convert_zero_to_empty),
+            "3天粉丝涨跌(Telegram)": info_sheet['3天粉丝涨跌(Telegram)'].fillna("").apply(convert_zero_to_empty)
         })
 
         # Style the DataFrame with colors
@@ -70,22 +73,25 @@ def show_excel():
         # Apply styling
         styled_df = result_df.style\
             .hide(axis='index')\
-            .applymap(color_negative_red, subset=[
-                "24h交易量 <button class='sort-arrow'>↕</button>",
-                "24h粉丝涨跌(X) <button class='sort-arrow'>↕</button>",
-                "3天粉丝涨跌(X) <button class='sort-arrow'>↕</button>",
-                "24h粉丝涨跌(Discord) <button class='sort-arrow'>↕</button>",
-                "3天粉丝涨跌(Discord) <button class='sort-arrow'>↕</button>"
+            .map(color_negative_red, subset=[
+                "24h粉丝涨跌(X)",
+                "3天粉丝涨跌(X)",
+                "24h粉丝涨跌(Discord)",
+                "3天粉丝涨跌(Discord)",
+                "24h粉丝涨跌(Telegram)",
+                "3天粉丝涨跌(Telegram)"
             ])\
             .format({
                 "代币": format_token_column,
                 "X粉丝数量": lambda x: "{:,}".format(x) if isinstance(x, (int, float)) and x != "" else x,
                 "Discord粉丝数量": lambda x: "{:,}".format(x) if isinstance(x, (int, float)) and x != "" else x,
-                "24h交易量 <button class='sort-arrow'>↕</button>": lambda x: f"{x}%" if x != "" else x,
-                "24h粉丝涨跌(X) <button class='sort-arrow'>↕</button>": lambda x: f"{x}%" if x != "" else x,
-                "3天粉丝涨跌(X) <button class='sort-arrow'>↕</button>": lambda x: f"{x}%" if x != "" else x,
-                "24h粉丝涨跌(Discord) <button class='sort-arrow'>↕</button>": lambda x: f"{x}%" if x != "" else x,
-                "3天粉丝涨跌(Discord) <button class='sort-arrow'>↕</button>": lambda x: f"{x}%" if x != "" else x
+                "Telegram粉丝数量": lambda x: "{:,}".format(x) if isinstance(x, (int, float)) and x != "" else x,
+                "24h粉丝涨跌(X)": lambda x: f"{x}%" if x != "" else x,
+                "3天粉丝涨跌(X)": lambda x: f"{x}%" if x != "" else x,
+                "24h粉丝涨跌(Discord)": lambda x: f"{x}%" if x != "" else x,
+                "3天粉丝涨跌(Discord)": lambda x: f"{x}%" if x != "" else x,
+                "24h粉丝涨跌(Telegram)": lambda x: f"{x}%" if x != "" else x,
+                "3天粉丝涨跌(Telegram)": lambda x: f"{x}%" if x != "" else x
             })\
             .set_table_attributes('class="dataframe table table-dark table-striped"')
 
