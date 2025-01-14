@@ -1,494 +1,365 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Social Media Follower Count</title>
+    <title>Crypto社交数据</title>
     <style>
         body {
-            background-color: #121212;
-            color: #ffffff;
+            background-color: black;
+            color: white;
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
         }
-        
-        h1 {
-            text-align: center;
-            font-size: 2rem;
-            color: #00ffcc;
+
+        .search-container {
+            margin: 20px 0;
         }
-        
-        .dataframe {
-            margin: 20px auto;
-            max-width: 1200px;  /* Fixed maximum width */
-            table-layout: fixed;  /* Fixed table layout */
+
+        #searchInput {
+            width: 400px;
+            padding: 12px;
+            font-size: 18px;
+            background: #333;
+            border: 1px solid #555;
+            color: white;
         }
-        
-        .dataframe th {
-            padding: 8px 10px !important;
-            text-align: right !important;
-            color: #00ffcc;
-            font-weight: normal;
-            white-space: nowrap;
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
         }
-        
-        .dataframe td {
-            padding: 8px 10px !important;
-            text-align: right !important;
+
+        th, td {
+            padding: 12px;
+            text-align: right;
+            border-bottom: 1px solid #333;
         }
-        
-        /* Token column (first column) */
-        .dataframe td:first-child {
-            text-align: left !important;
-            white-space: nowrap;
-            width: 200px;  /* Fixed width for first column */
-        }
-        
-        /* Style for the token links */
-        .token-link {
-            color: #00ffcc;
-            text-decoration: none;
-            border: 1px solid #00ffcc;
-            border-radius: 4px;
-            padding: 2px 8px;
-            margin-left: 10px;
-            white-space: nowrap;
-        }
-        
-        .token-link:hover {
-            background-color: rgba(0, 255, 204, 0.1);
-        }
-        
-        /* Column widths */
-        .dataframe th:nth-child(2),
-        .dataframe td:nth-child(2) { 
-            min-width: 120px !important; 
-            width: 120px !important; 
-        }
-        
-        .dataframe th:nth-child(3),
-        .dataframe td:nth-child(3) { width: 100px; }  /* X粉丝数量 */
-        
-        .dataframe th:nth-child(4),
-        .dataframe td:nth-child(4) { 
-            min-width: 120px !important; 
-            width: 120px !important; 
-        }
-        
-        .dataframe th:nth-child(5),
-        .dataframe td:nth-child(5) { width: 100px; }  /* 24h粉丝涨跌 (X) */
-        
-        .dataframe th:nth-child(6),
-        .dataframe td:nth-child(6) { 
-            min-width: 120px !important; 
-            width: 120px !important; 
-        }
-        
-        /* Alternating row colors */
-        .dataframe tr:nth-child(even) {
-            background-color: #1e1e1e;
-        }
-        
-        .dataframe tr:nth-child(odd) {
-            background-color: #141414;
-        }
-        
-        /* Header break styling */
-        .header-break {
-            display: block;
-            font-size: 0.8em;
-            color: #888;
-        }
-        
-        /* Sorting arrows styling */
-        .sort-header {
-            cursor: pointer;
-        }
-        
-        .sort-header:hover {
-            background-color: rgba(0, 255, 204, 0.1);
-        }
-        
+
         th {
-            white-space: nowrap !important;  /* Prevent header text wrapping */
-            padding: 12px !important;
-            vertical-align: middle !important;
+            background: #111;
+            cursor: pointer;
+            position: relative;
+            white-space: nowrap;
         }
-        
-        .sort-arrow {
+
+        th:first-child, td:first-child {
+            text-align: left;
+        }
+
+        .sort-icon {
             display: inline-block;
-            margin-left: 8px;
-            font-size: 16px;
+            width: 20px;
+            margin-left: 5px;
+            color: #666;
+        }
+
+        .negative {
+            color: #ff4d4d;  /* softer red */
+        }
+
+        .positive {
+            color: #33cc33;  /* softer green */
+        }
+
+        .diy-button {
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 12px 30px;
             cursor: pointer;
-            color: #00ffcc;
-            background: transparent;
-            border: 1px solid #00ffcc;
-            border-radius: 4px;
-            padding: 2px 6px;
-            vertical-align: middle;
+            margin-right: 10px;
+            font-size: 18px;
         }
-        
-        .sort-arrow:hover {
-            background-color: rgba(0, 255, 204, 0.1);
-        }
-        
-        /* Ensure the token cell has enough width */
-        td:first-child {
-            min-width: 150px;
-        }
-        
-        .customize-button {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: transparent;
-            color: #00ffcc;
-            border: 1px solid #00ffcc;
-            border-radius: 4px;
-            padding: 12px 24px;  /* Bigger padding */
-            cursor: pointer;
-            z-index: 1000;
-            font-size: 18px;    /* Bigger font */
-        }
-        
-        .customize-button:hover {
-            background-color: rgba(0, 255, 204, 0.1);
-        }
-        
+
         .column-selector {
             display: none;
             position: absolute;
-            top: 70px;          /* Adjusted for bigger button */
-            right: 20px;
-            background: #1a1a1a;
-            border: 1px solid #00ffcc;
-            border-radius: 4px;
-            padding: 20px;      /* More padding */
+            background: #222;
+            border: 1px solid #555;
+            padding: 10px;
             z-index: 1000;
-            min-width: 250px;   /* Ensure enough width */
         }
-        
-        .column-option {
+
+        .column-selector label {
+            display: block;
+            margin: 5px 0;
+        }
+
+        .last-update {
+            color: #888;  /* slightly lighter gray */
+            font-size: 20px;  /* increased from 16px */
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Customize overlay styling */
+        .toggle-container {
+            padding: 20px;
+            background: #1a1a1a;
+            border: 1px solid white;
+            border-radius: 4px;
+        }
+
+        /* Make checkboxes and text bigger */
+        .toggle-option {
+            margin: 15px 0;
+            font-size: 18px;
             display: flex;
             align-items: center;
-            margin: 15px 0;     /* More vertical spacing */
-            color: white;
-            font-size: 16px;    /* Bigger font */
-        }
-        
-        .column-option input[type="checkbox"] {
-            width: 20px;        /* Bigger checkbox */
-            height: 20px;       /* Bigger checkbox */
-            margin-right: 15px; /* More spacing after checkbox */
-            cursor: pointer;
-        }
-        
-        .column-option label {
-            cursor: pointer;    /* Make labels clickable */
-            user-select: none;  /* Prevent text selection */
-            flex: 1;           /* Take remaining space */
-            padding: 5px 0;    /* Bigger click target */
-        }
-        
-        /* Make the entire option row clickable */
-        .column-option:hover {
-            background-color: rgba(0, 255, 204, 0.1);
-            border-radius: 4px;
-            padding-left: 10px;
-            margin-left: -10px;
-            margin-right: -10px;
-            padding-right: 10px;
-        }
-        
-        .hidden-column {
-            display: none;
-        }
-        
-        .last-update {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: #00ffcc;
-            font-size: 16px;
-            padding: 12px 24px;
-            border: 1px solid #00ffcc;
-            border-radius: 4px;
-            background: transparent;
-        }
-        
-        .column-toggles {
-            padding: 20px;
-            background: #111;
-            border-radius: 10px;
-            border: 1px solid #00ffcc;
         }
 
-        .toggle-button {
-            display: block;
-            width: 100%;
-            padding: 12px 20px;
-            margin: 8px 0;
-            background: #222;
-            border: 1px solid #00ffcc;
-            border-radius: 6px;
-            color: #00ffcc;
-            font-size: 16px;
-            text-align: left;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .toggle-button.active {
-            background: #00ffcc22;
-        }
-
-        .toggle-button:hover {
-            background: #00ffcc11;
-        }
-
-        /* Custom checkbox styling */
-        .toggle-button .checkbox-icon {
-            float: right;
+        .toggle-option input[type="checkbox"] {
             width: 20px;
             height: 20px;
-            border: 2px solid #00ffcc;
-            border-radius: 4px;
-            margin-left: 10px;
-            position: relative;
+            margin-right: 12px;
+            cursor: pointer;
         }
 
-        .toggle-button.active .checkbox-icon:after {
-            content: '✓';
-            position: absolute;
-            color: #00ffcc;
+        .toggle-option label {
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            user-select: none;
+        }
+
+        /* Make the container wider */
+        .toggle-popup {
+            min-width: 300px;
+            padding: 15px;
+        }
+
+        /* Styling for the custom display modal/popup */
+        .modal-content,
+        .自定义 {
+            padding: 30px !important;
+            background: #1a1a1a !important;
+            border: 2px solid white !important;
+            border-radius: 8px !important;
+            min-width: 600px !important;  /* Even wider to accommodate bigger text */
+        }
+
+        /* Make checkboxes significantly bigger */
+        input[type="checkbox"] {
+            transform: scale(2.5) !important;
+            margin: 15px 35px 15px 10px !important;  /* More margin on right for bigger text */
+            cursor: pointer !important;
+        }
+
+        /* Much bigger text for labels */
+        .自定义 label,
+        .modal-body label,
+        div[style*="margin-top: 20px"] label {
+            font-size: 32px !important;  /* Dramatically increased font size */
+            color: white !important;
+            margin-left: 15px !important;
+            cursor: pointer !important;
+            font-weight: 500 !important;
+        }
+
+        /* More spacing for bigger text */
+        .自定义 div,
+        .modal-body div {
+            margin: 30px 0 !important;  /* More vertical spacing for bigger text */
+            display: flex !important;
+            align-items: center !important;
+            padding: 8px 0 !important;
+        }
+
+        /* Wider container for bigger text */
+        .modal-dialog,
+        .自定义 {
+            min-width: 600px !important;
+            margin: 20px !important;
+        }
+
+        /* Style for the 详细数据 button */
+        .详细数据-btn {
+            background-color: transparent;
+            color: white;
+            border: 1px solid white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
             font-size: 16px;
-            top: -2px;
-            left: 2px;
+            margin-left: 15px;
+            white-space: nowrap;
+            transition: background-color 0.2s;
+        }
+
+        .详细数据-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+        }
+
+        /* Make the token column wider to accommodate the button */
+        .dataframe td:first-child {
+            min-width: 200px;
+            padding-right: 20px;
         }
     </style>
 </head>
 <body>
-    <h1>Crypto社交平台数据</h1>
-    <div style="text-align: center; margin: 20px;">
-        <input type="text" id="tokenSearch" placeholder="搜索代币..." 
-               style="background: black; color: white; border: 1px solid #00ffcc; padding: 8px; border-radius: 4px;">
+    <div class="page-title">Crypto社交数据</div>
+    
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="搜索代币...">
+        <button class="diy-button" onclick="toggleColumnSelector()">自定义选项</button>
+        <div class="last-update">最后更新: {{ last_update }}</div>
     </div>
-    
-    <div>
-        {{ data | safe }}
+
+    <div id="columnSelector" class="column-selector">
+        <label><input type="checkbox" data-column="X粉丝数量" data-order="1" checked> X粉丝数量</label>
+        <label><input type="checkbox" data-column="24h涨跌(X)" data-order="2" checked> 24h涨跌(X)</label>
+        <label><input type="checkbox" data-column="3天涨跌(X)" data-order="3"> 3天涨跌(X)</label>
+        <label><input type="checkbox" data-column="Discord粉丝数量" data-order="4" checked> Discord粉丝数量</label>
+        <label><input type="checkbox" data-column="24h涨跌(Discord)" data-order="5" checked> 24h涨跌(Discord)</label>
+        <label><input type="checkbox" data-column="3天涨跌(Discord)" data-order="6"> 3天涨跌(Discord)</label>
+        <label><input type="checkbox" data-column="Telegram粉丝数量" data-order="7" checked> Telegram粉丝数量</label>
+        <label><input type="checkbox" data-column="24h涨跌(Telegram)" data-order="8" checked> 24h涨跌(Telegram)</label>
+        <label><input type="checkbox" data-column="3天涨跌(Telegram)" data-order="9"> 3天涨跌(Telegram)</label>
     </div>
-    
-    <button class="customize-button" onclick="toggleColumnSelector()">自定义</button>
-    <div class="column-selector" id="columnSelector">
-        <div class="column-toggles">
-            <button class="toggle-button active" data-column="x_followers">
-                X粉丝数量
-                <span class="checkbox-icon"></span>
-            </button>
-            <button class="toggle-button active" data-column="x_24h">
-                24h粉丝涨跌(X)
-                <span class="checkbox-icon"></span>
-            </button>
-            <button class="toggle-button" data-column="x_3d">
-                3天粉丝涨跌(X)
-                <span class="checkbox-icon"></span>
-            </button>
-            <button class="toggle-button active" data-column="discord_followers">
-                Discord粉丝数量
-                <span class="checkbox-icon"></span>
-            </button>
-            <button class="toggle-button active" data-column="discord_24h">
-                24h粉丝涨跌(Discord)
-                <span class="checkbox-icon"></span>
-            </button>
-            <button class="toggle-button" data-column="discord_3d">
-                3天粉丝涨跌(Discord)
-                <span class="checkbox-icon"></span>
-            </button>
-            <button class="toggle-button active" data-column="telegram_followers">
-                Telegram粉丝数量
-                <span class="checkbox-icon"></span>
-            </button>
-            <button class="toggle-button active" data-column="telegram_24h">
-                24h粉丝涨跌(Telegram)
-                <span class="checkbox-icon"></span>
-            </button>
-            <button class="toggle-button" data-column="telegram_3d">
-                3天粉丝涨跌(Telegram)
-                <span class="checkbox-icon"></span>
-            </button>
-        </div>
-    </div>
-    
-    <div class="last-update">最后更新：{{ last_update }}</div>
-    
+
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>代币</th>
+                <th>X粉丝数量 <span class="sort-icon">↕</span></th>
+                <th>24h涨跌(X) <span class="sort-icon">↕</span></th>
+                <th>Discord粉丝数量 <span class="sort-icon">↕</span></th>
+                <th>24h涨跌(Discord) <span class="sort-icon">↕</span></th>
+                <th>Telegram粉丝数量 <span class="sort-icon">↕</span></th>
+                <th>24h涨跌(Telegram) <span class="sort-icon">↕</span></th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
     <script>
-        const columns = {
-            'token': '代币',
-            'x_followers': 'X粉丝数量',
-            'x_24h': '24h粉丝涨跌(X)',
-            'x_3d': '3天粉丝涨跌(X)',
-            'discord_followers': 'Discord粉丝数量',
-            'discord_24h': '24h粉丝涨跌(Discord)',
-            'discord_3d': '3天粉丝涨跌(Discord)',
-            'telegram_followers': 'Telegram粉丝数量',
-            'telegram_24h': '24h粉丝涨跌(Telegram)',
-            'telegram_3d': '3天粉丝涨跌(Telegram)'
-        };
-
-        // Default hidden columns
-        const defaultHiddenColumns = [
-            '3天粉丝涨跌(X)',
-            '3天粉丝涨跌(Discord)',
-            '3天粉丝涨跌(Telegram)'
-        ];
-
-        // Initialize column visibility
-        let columnVisibility = {};
-        for (let key in columns) {
-            columnVisibility[columns[key]] = !defaultHiddenColumns.includes(columns[key]);
-        }
-
-        function updateColumnVisibility() {
-            const table = document.querySelector('table.dataframe');
-            if (!table) return;
-
-            const headerRow = table.querySelector('thead tr');
-            if (!headerRow) return;
-
-            const headers = headerRow.querySelectorAll('th');
-            
-            headers.forEach((header, index) => {
-                const headerText = header.textContent.trim();
-                const isVisible = columnVisibility[headerText] !== false;  // Default to visible if not set
-                
-                // Update header visibility
-                header.style.display = isVisible ? '' : 'none';
-                
-                // Update all cells in this column
-                table.querySelectorAll('tbody tr').forEach(row => {
-                    const cell = row.cells[index];
-                    if (cell) {
-                        cell.style.display = isVisible ? '' : 'none';
-                    }
-                });
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const buttons = document.querySelectorAll('.toggle-button');
-            
-            buttons.forEach(button => {
-                const columnKey = button.dataset.column;
-                const columnName = columns[columnKey];
-                
-                // Set initial state
-                button.classList.toggle('active', !defaultHiddenColumns.includes(columnName));
-                
-                button.addEventListener('click', () => {
-                    button.classList.toggle('active');
-                    columnVisibility[columnName] = button.classList.contains('active');
-                    updateColumnVisibility();
-                });
-            });
-            
-            // Initial visibility update
-            updateColumnVisibility();
-        });
-
-        const table = document.querySelector('.dataframe');
-        const tbody = table.querySelector('tbody');
-        const originalOrder = Array.from(tbody.querySelectorAll('tr')).map(row => row.cloneNode(true));
-        
-        // Add click handlers to headers
-        table.querySelectorAll('th').forEach((header, index) => {
-            if (header.textContent.includes('↕')) {
-                header.onclick = () => sortTableWithReset(index);
-            }
-        });
-        
+        let tableData = {{ data|tojson|safe }};
         let sortStates = {};
         
-        function sortTableWithReset(columnIndex) {
-            const rows = Array.from(tbody.querySelectorAll('tr'));
-            sortStates[columnIndex] = (sortStates[columnIndex] || 0) + 1;
-            if (sortStates[columnIndex] > 2) sortStates[columnIndex] = 0;
+        function renderTable(data) {
+            const tbody = document.querySelector('tbody');
+            tbody.innerHTML = '';
             
-            // Clear tbody
-            while (tbody.firstChild) {
-                tbody.removeChild(tbody.firstChild);
-            }
-            
-            if (sortStates[columnIndex] === 0) {
-                // Reset to original order
-                originalOrder.forEach(row => tbody.appendChild(row.cloneNode(true)));
-            } else {
-                // Sort
-                rows.sort((a, b) => compareValues(a, b, columnIndex, sortStates[columnIndex] === 1));
-                rows.forEach(row => tbody.appendChild(row));
-            }
-        }
-        
-        function compareValues(a, b, columnIndex, ascending) {
-            let aVal = a.cells[columnIndex].textContent.trim().replace('%', '');
-            let bVal = b.cells[columnIndex].textContent.trim().replace('%', '');
-            
-            aVal = aVal === '' ? 0 : parseFloat(aVal);
-            bVal = bVal === '' ? 0 : parseFloat(bVal);
-            
-            return ascending ? aVal - bVal : bVal - aVal;
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                const visibleColumns = getVisibleColumns();
+                
+                tr.innerHTML = `
+                    <td>${row['代币']}</td>
+                    ${visibleColumns.map(col => {
+                        const value = row[col];
+                        const isPercentage = value.toString().includes('%');
+                        const isNegative = value.toString().includes('-');
+                        const isPositive = isPercentage && !isNegative && value !== '';
+                        return `<td class="${isNegative ? 'negative' : isPositive ? 'positive' : ''}">${value}</td>`;
+                    }).join('')}
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
-        document.getElementById('tokenSearch').addEventListener('input', function() {
-            const searchText = this.value.toLowerCase();
-            const rows = document.querySelectorAll('.dataframe tr');
+        function sortTable(columnIndex) {
+            const columnName = getVisibleColumns()[columnIndex - 1];
+            if (!columnName) return;
+
+            sortStates[columnName] = (sortStates[columnName] || 0) + 1;
+            if (sortStates[columnName] > 2) sortStates[columnName] = 0;
+
+            const state = sortStates[columnName];
             
-            rows.forEach((row, index) => {
-                if (index === 0) return; // Skip header row
-                const tokenCell = row.cells[0];
-                if (tokenCell) {
-                    const token = tokenCell.textContent.toLowerCase();
-                    row.style.display = token.includes(searchText) ? '' : 'none';
+            if (state === 0) {
+                renderTable(tableData);
+                return;
+            }
+
+            const sorted = [...tableData].sort((a, b) => {
+                let aVal = a[columnName].toString().replace(/[,%]/g, '');
+                let bVal = b[columnName].toString().replace(/[,%]/g, '');
+                
+                aVal = aVal === '' ? 0 : parseFloat(aVal);
+                bVal = bVal === '' ? 0 : parseFloat(bVal);
+
+                return state === 1 ? aVal - bVal : bVal - aVal;
+            });
+
+            renderTable(sorted);
+        }
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = tableData.filter(row => 
+                row['代币'].toLowerCase().includes(searchTerm)
+            );
+            renderTable(filtered);
+        }
+
+        function getVisibleColumns() {
+            const checkboxes = document.querySelectorAll('#columnSelector input:checked');
+            return Array.from(checkboxes)
+                .sort((a, b) => parseInt(a.dataset.order) - parseInt(b.dataset.order))
+                .map(cb => cb.dataset.column);
+        }
+
+        function updateTableHeaders() {
+            const visibleColumns = getVisibleColumns();
+            const headerRow = document.querySelector('thead tr');
+            
+            // Clear existing headers except for 代币
+            while (headerRow.children.length > 1) {
+                headerRow.removeChild(headerRow.lastChild);
+            }
+            
+            // Add headers for visible columns
+            visibleColumns.forEach(column => {
+                const th = document.createElement('th');
+                th.innerHTML = `${column} <span class="sort-icon">↕</span>`;
+                headerRow.appendChild(th);
+            });
+
+            // Reattach sort listeners
+            document.querySelectorAll('th').forEach((th, index) => {
+                if (index > 0) {
+                    th.addEventListener('click', () => sortTable(index));
                 }
             });
-        });
-
-        // Debug: Log the headers to verify they're being found
-        console.log("Sort headers found:", document.querySelectorAll('.sort-header').length);
+        }
 
         function toggleColumnSelector() {
             const selector = document.getElementById('columnSelector');
             selector.style.display = selector.style.display === 'none' ? 'block' : 'none';
         }
-        
-        // Close the selector if clicking outside
-        document.addEventListener('click', function(event) {
-            const selector = document.getElementById('columnSelector');
-            const customizeButton = document.querySelector('.customize-button');
-            if (!selector.contains(event.target) && event.target !== customizeButton) {
-                selector.style.display = 'none';
+
+        // Event Listeners
+        document.querySelectorAll('th').forEach((th, index) => {
+            if (index > 0) {
+                th.addEventListener('click', () => sortTable(index));
             }
         });
-        
-        function toggleColumn(columnIndex, show) {
-            const table = document.querySelector('.dataframe');
-            const headers = table.querySelectorAll('th');
-            const rows = table.querySelectorAll('tr');
-            
-            // Toggle header
-            if (headers[columnIndex]) {
-                headers[columnIndex].classList.toggle('hidden-column', !show);
-            }
-            
-            // Toggle cells
-            rows.forEach(row => {
-                const cell = row.cells[columnIndex];
-                if (cell) {
-                    cell.classList.toggle('hidden-column', !show);
-                }
+
+        document.getElementById('searchInput').addEventListener('input', filterTable);
+
+        document.querySelectorAll('#columnSelector input').forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                updateTableHeaders();
+                renderTable(tableData);
             });
-        }
+        });
+
+        // Initial render
+        updateTableHeaders();
+        renderTable(tableData);
     </script>
 </body>
 </html>
