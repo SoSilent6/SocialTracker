@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ token_name }} - 详细数据</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .back-button {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid white;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+        
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 1px;
+            margin: 20px 0;
+            border-bottom: 1px solid white;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            color: white;
+            border: 1px solid white;
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            background: black;
+        }
+        
+        .tab.active {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .content {
+            display: none;
+        }
+        
+        .content.active {
+            display: block;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+        
+        th {
+            color: white;
+        }
+        
+        .followers {
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-button">← 返回</a>
+    <h1>{{ token_name }}</h1>
+    
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('x')">X数据</div>
+        <div class="tab" onclick="switchTab('discord')">Discord数据</div>
+        <div class="tab" onclick="switchTab('telegram')">Telegram数据</div>
+    </div>
+    
+    <div id="x" class="content active">
+        <table>
+            <thead>
+                <tr>
+                    <th>时间</th>
+                    <th style="text-align: right">粉丝数</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in x_data %}
+                <tr>
+                    <td>{{ entry.time }}</td>
+                    <td class="followers">{{ "{:,}".format(entry.followers) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div id="discord" class="content">
+        <table>
+            <thead>
+                <tr>
+                    <th>时间</th>
+                    <th style="text-align: right">粉丝数</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in discord_data %}
+                <tr>
+                    <td>{{ entry.time }}</td>
+                    <td class="followers">{{ "{:,}".format(entry.followers) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div id="telegram" class="content">
+        <table>
+            <thead>
+                <tr>
+                    <th>时间</th>
+                    <th style="text-align: right">粉丝数</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in telegram_data %}
+                <tr>
+                    <td>{{ entry.time }}</td>
+                    <td class="followers">{{ "{:,}".format(entry.followers) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+            
+            let tabIndex;
+            switch(tab) {
+                case 'x': tabIndex = 1; break;
+                case 'discord': tabIndex = 2; break;
+                case 'telegram': tabIndex = 3; break;
+            }
+            
+            document.querySelector(`.tab:nth-child(${tabIndex})`).classList.add('active');
+            document.getElementById(tab).classList.add('active');
+        }
+    </script>
+</body>
+</html> 
