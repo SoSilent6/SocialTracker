@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crypto社交数据</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .search-container {
+            margin: 20px 0;
+        }
+
+        #searchInput {
+            width: 400px;
+            padding: 12px;
+            font-size: 18px;
+            background: #333;
+            border: 1px solid #555;
+            color: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: right;
+            border-bottom: 1px solid #333;
+        }
+
+        th {
+            background: #111;
+            cursor: pointer;
+            position: relative;
+            white-space: nowrap;
+        }
+
+        th:first-child, td:first-child {
+            text-align: left;
+        }
+
+        .sort-icon {
+            display: inline-block;
+            width: 20px;
+            margin-left: 5px;
+            color: #666;
+        }
+
+        .negative {
+            color: #ff4d4d;  /* softer red */
+        }
+
+        .positive {
+            color: #33cc33;  /* softer green */
+        }
+
+        .diy-button {
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 12px 30px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .column-selector {
+            display: none;
+            position: absolute;
+            background: #222;
+            border: 1px solid #555;
+            padding: 10px;
+            z-index: 1000;
+        }
+
+        .column-selector label {
+            display: block;
+            margin: 5px 0;
+        }
+
+        .last-update {
+            color: #888;  /* slightly lighter gray */
+            font-size: 20px;  /* increased from 16px */
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Customize overlay styling */
+        .toggle-container {
+            padding: 20px;
+            background: #1a1a1a;
+            border: 1px solid white;
+            border-radius: 4px;
+        }
+
+        /* Make checkboxes and text bigger */
+        .toggle-option {
+            margin: 15px 0;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+        }
+
+        .toggle-option input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+
+        .toggle-option label {
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            user-select: none;
+        }
+
+        /* Make the container wider */
+        .toggle-popup {
+            min-width: 300px;
+            padding: 15px;
+        }
+
+        /* Styling for the custom display modal/popup */
+        .modal-content,
+        .自定义 {
+            padding: 30px !important;
+            background: #1a1a1a !important;
+            border: 2px solid white !important;
+            border-radius: 8px !important;
+            min-width: 600px !important;  /* Even wider to accommodate bigger text */
+        }
+
+        /* Make checkboxes significantly bigger */
+        input[type="checkbox"] {
+            transform: scale(2.5) !important;
+            margin: 15px 35px 15px 10px !important;  /* More margin on right for bigger text */
+            cursor: pointer !important;
+        }
+
+        /* Much bigger text for labels */
+        .自定义 label,
+        .modal-body label,
+        div[style*="margin-top: 20px"] label {
+            font-size: 32px !important;  /* Dramatically increased font size */
+            color: white !important;
+            margin-left: 15px !important;
+            cursor: pointer !important;
+            font-weight: 500 !important;
+        }
+
+        /* More spacing for bigger text */
+        .自定义 div,
+        .modal-body div {
+            margin: 30px 0 !important;  /* More vertical spacing for bigger text */
+            display: flex !important;
+            align-items: center !important;
+            padding: 8px 0 !important;
+        }
+
+        /* Wider container for bigger text */
+        .modal-dialog,
+        .自定义 {
+            min-width: 600px !important;
+            margin: 20px !important;
+        }
+
+        /* Style for the 详细数据 button */
+        .详细数据-btn {
+            background-color: transparent;
+            color: white;
+            border: 1px solid white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 16px;
+            margin-left: 15px;
+            white-space: nowrap;
+            transition: background-color 0.2s;
+        }
+
+        .详细数据-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+        }
+
+        /* Make the token column wider to accommodate the button */
+        .dataframe td:first-child {
+            min-width: 200px;
+            padding-right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-title">Crypto社交数据</div>
+    
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="搜索代币...">
+        <button class="diy-button" onclick="toggleColumnSelector()">自定义选项</button>
+        <div class="last-update">最后更新: {{ last_update }}</div>
+    </div>
+
+    <div id="columnSelector" class="column-selector">
+        <label><input type="checkbox" data-column="X粉丝数量" data-order="1" checked> X粉丝数量</label>
+        <label><input type="checkbox" data-column="24h涨跌(X)" data-order="2" checked> 24h涨跌(X)</label>
+        <label><input type="checkbox" data-column="3天涨跌(X)" data-order="3"> 3天涨跌(X)</label>
+        <label><input type="checkbox" data-column="Discord粉丝数量" data-order="4" checked> Discord粉丝数量</label>
+        <label><input type="checkbox" data-column="24h涨跌(Discord)" data-order="5" checked> 24h涨跌(Discord)</label>
+        <label><input type="checkbox" data-column="3天涨跌(Discord)" data-order="6"> 3天涨跌(Discord)</label>
+        <label><input type="checkbox" data-column="Telegram粉丝数量" data-order="7" checked> Telegram粉丝数量</label>
+        <label><input type="checkbox" data-column="24h涨跌(Telegram)" data-order="8" checked> 24h涨跌(Telegram)</label>
+        <label><input type="checkbox" data-column="3天涨跌(Telegram)" data-order="9"> 3天涨跌(Telegram)</label>
+    </div>
+
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>代币</th>
+                <th>X粉丝数量 <span class="sort-icon">↕</span></th>
+                <th>24h涨跌(X) <span class="sort-icon">↕</span></th>
+                <th>Discord粉丝数量 <span class="sort-icon">↕</span></th>
+                <th>24h涨跌(Discord) <span class="sort-icon">↕</span></th>
+                <th>Telegram粉丝数量 <span class="sort-icon">↕</span></th>
+                <th>24h涨跌(Telegram) <span class="sort-icon">↕</span></th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <script>
+        let tableData = {{ data|tojson|safe }};
+        let sortStates = {};
+        
+        function renderTable(data) {
+            const tbody = document.querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                const visibleColumns = getVisibleColumns();
+                
+                tr.innerHTML = `
+                    <td>${row['代币']}</td>
+                    ${visibleColumns.map(col => {
+                        const value = row[col];
+                        const isPercentage = value.toString().includes('%');
+                        const isNegative = value.toString().includes('-');
+                        const isPositive = isPercentage && !isNegative && value !== '';
+                        return `<td class="${isNegative ? 'negative' : isPositive ? 'positive' : ''}">${value}</td>`;
+                    }).join('')}
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function sortTable(columnIndex) {
+            const columnName = getVisibleColumns()[columnIndex - 1];
+            if (!columnName) return;
+
+            sortStates[columnName] = (sortStates[columnName] || 0) + 1;
+            if (sortStates[columnName] > 2) sortStates[columnName] = 0;
+
+            const state = sortStates[columnName];
+            
+            if (state === 0) {
+                renderTable(tableData);
+                return;
+            }
+
+            const sorted = [...tableData].sort((a, b) => {
+                let aVal = a[columnName].toString().replace(/[,%]/g, '');
+                let bVal = b[columnName].toString().replace(/[,%]/g, '');
+                
+                aVal = aVal === '' ? 0 : parseFloat(aVal);
+                bVal = bVal === '' ? 0 : parseFloat(bVal);
+
+                return state === 1 ? aVal - bVal : bVal - aVal;
+            });
+
+            renderTable(sorted);
+        }
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = tableData.filter(row => 
+                row['代币'].toLowerCase().includes(searchTerm)
+            );
+            renderTable(filtered);
+        }
+
+        function getVisibleColumns() {
+            const checkboxes = document.querySelectorAll('#columnSelector input:checked');
+            return Array.from(checkboxes)
+                .sort((a, b) => parseInt(a.dataset.order) - parseInt(b.dataset.order))
+                .map(cb => cb.dataset.column);
+        }
+
+        function updateTableHeaders() {
+            const visibleColumns = getVisibleColumns();
+            const headerRow = document.querySelector('thead tr');
+            
+            // Clear existing headers except for 代币
+            while (headerRow.children.length > 1) {
+                headerRow.removeChild(headerRow.lastChild);
+            }
+            
+            // Add headers for visible columns
+            visibleColumns.forEach(column => {
+                const th = document.createElement('th');
+                th.innerHTML = `${column} <span class="sort-icon">↕</span>`;
+                headerRow.appendChild(th);
+            });
+
+            // Reattach sort listeners
+            document.querySelectorAll('th').forEach((th, index) => {
+                if (index > 0) {
+                    th.addEventListener('click', () => sortTable(index));
+                }
+            });
+        }
+
+        function toggleColumnSelector() {
+            const selector = document.getElementById('columnSelector');
+            selector.style.display = selector.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Event Listeners
+        document.querySelectorAll('th').forEach((th, index) => {
+            if (index > 0) {
+                th.addEventListener('click', () => sortTable(index));
+            }
+        });
+
+        document.getElementById('searchInput').addEventListener('input', filterTable);
+
+        document.querySelectorAll('#columnSelector input').forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                updateTableHeaders();
+                renderTable(tableData);
+            });
+        });
+
+        // Initial render
+        updateTableHeaders();
+        renderTable(tableData);
+    </script>
+</body>
+</html>
