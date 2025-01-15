@@ -4,6 +4,30 @@ import pandas as pd
 from datetime import datetime
 import math
 import openpyxl
+import subprocess
+import tkinter as tk
+from tkinter import messagebox
+
+def ask_git_push():
+    # Only show prompt if this is the main process (not the reloader)
+    if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
+        root = tk.Tk()
+        root.withdraw()  # Hide the main window
+        
+        response = messagebox.askyesno(
+            "Git Push",
+            "Would you like to force push to GitHub?",
+            icon='question'
+        )
+        
+        if response:
+            try:
+                subprocess.run(['git', 'add', '.'], check=True)
+                subprocess.run(['git', 'commit', '-m', f"Update {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"], check=True)
+                subprocess.run(['git', 'push', '-f', 'origin', 'main'], check=True)
+                messagebox.showinfo("Success", "Successfully pushed to GitHub!")
+            except subprocess.CalledProcessError as e:
+                messagebox.showerror("Error", f"Failed to push to GitHub: {str(e)}")
 
 app = Flask(__name__)
 
@@ -138,4 +162,5 @@ def token_detail(token_name):
         return f"Error: {str(e)}", 500
 
 if __name__ == '__main__':
+    ask_git_push()
     app.run(host='0.0.0.0', debug=True)
